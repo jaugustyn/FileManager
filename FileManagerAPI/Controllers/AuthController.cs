@@ -1,8 +1,9 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using FileManager.Models;
+using FileManager.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -12,7 +13,7 @@ namespace FileManager.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        public static User user = new User();
+        private new static readonly User User = new User();
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
 
@@ -36,23 +37,23 @@ namespace FileManager.Controllers
         public async Task<ActionResult<User>> Register(UserDto request)
         {   
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-            user.PasswordHash = passwordHash;
-            user.PasswordSalt = passwordSalt;
-            user.Username = request.Username;
+            User.PasswordHash = passwordHash;
+            User.PasswordSalt = passwordSalt;
+            User.Username = request.Username;
 
-            return Ok(user);
+            return Ok(User);
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDto request)
         {
-            if (user.Username != request.Username)
+            if (User.Username != request.Username)
                 return BadRequest("User not found");
 
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            if (!VerifyPasswordHash(request.Password, User.PasswordHash, User.PasswordSalt))
                 return BadRequest("Wrong password");
 
-            string token = CreateToken(user);
+            string token = CreateToken(User);
 
             var refreshToken = GenerateRefreshToken();
             SetRefreshToken(refreshToken);
@@ -79,25 +80,25 @@ namespace FileManager.Controllers
             };
             Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
 
-            user.RefreshToken = newRefreshToken.Token;
-            user.TokenCreated = newRefreshToken.Created;
-            user.TokenExpires = newRefreshToken.Expires;
+            User.RefreshToken = newRefreshToken.Token;
+            User.TokenCreated = newRefreshToken.Created;
+            User.TokenExpires = newRefreshToken.Expires;
         }
 
         [HttpPost("refresh-token")]
         public async Task<ActionResult<string>> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            if (!user.RefreshToken.Equals(refreshToken))
+            if (!User.RefreshToken.Equals(refreshToken))
             {
                 return Unauthorized("Invalid refresh token.");
             }
-            else if (user.TokenExpires < DateTime.Now)
+            else if (User.TokenExpires < DateTime.Now)
             {
                 return Unauthorized("Token expired");
             }
 
-            string token = CreateToken(user);
+            string token = CreateToken(User);
             var newRefreshToken = GenerateRefreshToken();
             SetRefreshToken(newRefreshToken);
             

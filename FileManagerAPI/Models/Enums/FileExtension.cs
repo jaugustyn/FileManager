@@ -1,5 +1,8 @@
-﻿namespace FileManager.Models.Enums;
+﻿using System.Text.Json.Serialization;
 
+namespace FileManager.Models.Enums;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum FileExtension
 {
     Pdf = 1,

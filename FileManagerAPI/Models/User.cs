@@ -1,4 +1,4 @@
-﻿namespace FileManager;
+﻿namespace FileManager.Models;
 
 public class User
 {

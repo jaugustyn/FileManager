@@ -1,4 +1,4 @@
-﻿namespace FileManager;
+﻿namespace FileManager.Models.DTOs;
 
 public class UserDto
 {
